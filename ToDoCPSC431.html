@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List Application</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, #e9ecef, #dee2e6); /* Subtle gradient background */
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .container {
+            width: 95%; /* Adjusted for maximum use of space while maintaining margins */
+            max-width: 2000px; /* Increased max width for better visibility */
+            background-color: #fff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            padding: 40px; /* Increased padding for better spacing */
+            border-radius: 10px; /* Slightly larger radius for rounded corners */
+            margin: 20px; /* Ensures some space around the container */
+        }
+
+        header, footer {
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        h1 {
+            color: #007BFF; /* Blue for the main header */
+        }
+
+        h2 {
+            color: #343a40; /* Dark gray for subheaders */
+            margin-bottom: 20px; /* Added margin for spacing */
+        }
+
+        .list-display, .list-details {
+            margin-bottom: 30px; /* Increased bottom margin for better separation */
+        }
+
+        .list-summaries, .list-items {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        .list-summaries li, .list-items li {
+            padding: 15px; /* Increased padding for list items */
+            border-bottom: 1px solid #dee2e6;
+            font-size: 16px; /* Increased font size for readability */
+        }
+
+        .list-summaries li:last-child, .list-items li:last-child {
+            border-bottom: none;
+        }
+
+        button {
+            padding: 12px 24px; /* Larger buttons for easier interaction */
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 18px; /* Larger font size for better visibility */
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>To-Do List</h1>
+        </header>
+        <section class="list-display">
+            <h2>All Lists</h2>
+            <ul class="list-summaries">
+                <!-- List summaries will be generated here -->
+            </ul>
+        </section>
+        <section class="list-details">
+            <h2>List Details</h2>
+            <ul class="list-items">
+                <!-- List items will be generated here -->
+            </ul>
+        </section>
+        <footer>
+            <button id="createList">Create New List</button>
+        </footer>
+    </div>
+</body>
+</html>
