@@ -78,29 +78,187 @@
         button:hover {
             background-color: #0056b3;
         }
-    </style>
+        .list-items li, .add-item-controls {
+           display: flex;
+           justify-content: space-between;
+           align-items: center;
+       }
+
+       .delete-btn, .add-item-btn, .rename-list-btn, .sort-btn {
+           padding: 6px 12px;
+           color: white;
+           font-size: 14px;
+           border-radius: 5px;
+           cursor: pointer;
+           margin-right: 5px;
+       }
+
+       .delete-btn {
+           background-color: #dc3545;
+       }
+
+       .delete-btn:hover {
+           background-color: #c82333;
+       }
+
+       .add-item-btn {
+           background-color: #28a745;
+       }
+
+       .add-item-btn:hover {
+           background-color: #218838;
+       }
+
+       .rename-list-btn, .sort-btn {
+           background-color: #007bff;
+       }
+
+       .rename-list-btn:hover, .sort-btn:hover {
+           background-color: #0056b3;
+       }
+
+       input[type="text"] {
+           flex-grow: 1;
+           margin-right: 10px;
+       }
+
+       .completed {
+           text-decoration: line-through;
+           color: #6c757d;
+       }
+   </style>
+   <script>
+       document.addEventListener("DOMContentLoaded", function() {
+           let lists = [];
+           let currentListIndex = null;
+
+           const listSummariesElement = document.querySelector('.list-summaries');
+           const listItemsElement = document.querySelector('.list-items');
+           const listDetailsHeader = document.querySelector('.list-details h2');
+           const createListButton = document.getElementById('createList');
+           const sortByNameBtn = document.getElementById('sortByName');
+           const sortByCreatedBtn = document.getElementById('sortByCreated');
+
+           createListButton.addEventListener('click', function() {
+               const listName = prompt('Enter new list name:');
+               if (listName) {
+                   lists.push({ name: listName, items: [], created: new Date() });
+                   renderLists();
+               }
+           });
+
+           sortByNameBtn.addEventListener('click', function() {
+               lists.sort((a, b) => a.name.localeCompare(b.name));
+               renderLists();
+           });
+
+           sortByCreatedBtn.addEventListener('click', function() {
+               lists.sort((a, b) => a.created - b.created);
+               renderLists();
+           });
+
+           function renderLists() {
+               listSummariesElement.innerHTML = '';
+               lists.forEach((list, index) => {
+                   const li = document.createElement('li');
+                   li.textContent = list.name;
+                   li.addEventListener('click', () => {
+                       currentListIndex = index;
+                       renderItems();
+                   });
+                   listSummariesElement.appendChild(li);
+               });
+           }
+
+           function renderItems() {
+               if (currentListIndex !== null) {
+                   const items = lists[currentListIndex].items;
+                   listDetailsHeader.innerHTML = 'List Details - ' + lists[currentListIndex].name;
+                   
+                   const renameListBtn = document.createElement('button');
+                   renameListBtn.textContent = 'Rename List';
+                   renameListBtn.className = 'rename-list-btn';
+                   renameListBtn.onclick = function() {
+                       const newListName = prompt('Enter new list name:');
+                       if (newListName) {
+                           lists[currentListIndex].name = newListName;
+                           renderLists();
+                           renderItems();
+                       }
+                   };
+                   listDetailsHeader.appendChild(renameListBtn);
+
+                   listItemsElement.innerHTML = '';
+                   items.forEach((item, itemIndex) => {
+                       const li = document.createElement('li');
+                       li.textContent = item.text;
+                       li.className = item.done ? 'completed' : '';
+                       li.addEventListener('click', () => {
+                           item.done = !item.done;
+                           renderItems();
+                       });
+
+                       const deleteBtn = document.createElement('button');
+                       deleteBtn.textContent = 'Delete';
+                       deleteBtn.classList.add('delete-btn');
+                       deleteBtn.addEventListener('click', (e) => {
+                           e.stopPropagation();
+                           items.splice(itemIndex, 1);
+                           renderItems();
+                       });
+                       
+                       li.appendChild(deleteBtn);
+                       listItemsElement.appendChild(li);
+                   });
+
+                   const addItemControls = document.createElement('div');
+                   addItemControls.className = 'add-item-controls';
+
+                   const addItemInput = document.createElement('input');
+                   addItemInput.type = 'text';
+
+                   const addItemButton = document.createElement('button');
+                   addItemButton.textContent = 'Add Item';
+                   addItemButton.className = 'add-item-btn';
+                   addItemButton.onclick = () => {
+                       if (addItemInput.value) {
+                           lists[currentListIndex].items.push({ text: addItemInput.value, done: false });
+                           addItemInput.value = '';
+                           renderItems();
+                       }
+                   };
+
+                   addItemControls.appendChild(addItemInput);
+                   addItemControls.appendChild(addItemButton);
+                   listItemsElement.appendChild(addItemControls);
+               }
+           }
+       });
+   </script>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>To Do List Final</h1>
-            <h3>by Dustin Chavez and Braulio Martin</h3>
-        </header>
-        <section class="list-display">
-            <h2>All Lists</h2>
-            <ul class="list-summaries">
-                <!-- List summaries will be generated here -->
-            </ul>
-        </section>
-        <section class="list-details">
-            <h2>List Details</h2>
-            <ul class="list-items">
-                <!-- List items will be generated here -->
-            </ul>
-        </section>
-        <footer>
-            <button id="createList">Create New List</button>
-        </footer>
-    </div>
+   <div class="container">
+       <header>
+           <h1>To Do List Final</h1>
+           <h3>by Dustin Chavez and Braulio Martin</h3>
+           <button id="sortByName" class="sort-btn">Sort by Name</button>
+           <button id="sortByCreated" class="sort-btn">Sort by Created</button>
+       </header>
+       <section class="list-display">
+           <h2>All Lists</h2>
+           <ul class="list-summaries">
+               <!-- List summaries will be generated here -->
+           </ul>
+       </section>
+       <section class="list-details">
+           <h2>List Details</h2>
+           <ul class="list-items">
+               <!-- List items will be generated here -->
+           </ul>
+       </section>
+       <footer>
+           <button id="createList">Create New List</button>
+       </footer>
+   </div>
 </body>
 </html>
