@@ -19,69 +19,69 @@ $handler->process();
 // This function executes if you create a fetch() request to api/example.php and use "GET" as the method
 // By default you need to use api/example.php?id=123 to send an ID value. 
 // You can use .htaccess to clean up the request URL to something like api/example/123 instead. It's optional. 
-function GET (Handler $h)  // GOOD //
-{
-    // Get the "id" provided in the URL
-    $id = $h->request->get["id"] ?? false; 
+// function GET (Handler $h)  // GOOD //
+// {
+//     // Get the "id" provided in the URL
+//     $id = $h->request->get["id"] ?? false; 
 
-    if ($id !== false)
-    {
-        // Use the ID to get a single record from the data source
-        $h->response->json(getRecord($h, $id));
-    }else{
-        // No ID was provided, just get all of the records
-        $h->response->json(getAllRecords($h));
-    }
-}
+//     if ($id !== false)
+//     {
+//         // Use the ID to get a single record from the data source
+//         $h->response->json(getRecord($h, $id));
+//     }else{
+//         // No ID was provided, just get all of the records
+//         $h->response->json(getAllRecords($h));
+//     }
+// }
 
 // This secondary function is for getting 1 record from our DB
-function getRecord (Handler $handler, $id)
-{
-    // Create a new PDO object with a special function from our DataSource class
-    // This allows us to keep the MySQL credentials in 1 place and not rewrite them here
-    $pdo = $handler->db->PDO();
 
-    // This "query" is just a simple call to a stored procedure in our MySQL Database
-    // The question mark is a special placeholder for parameters the pecedure takes
-    $query = "CALL get_one_item(?)";
+//  function getRecord (Handler $handler, $id)
+// {
+//     // Create a new PDO object with a special function from our DataSource class
+//     // This allows us to keep the MySQL credentials in 1 place and not rewrite them here
+//     $pdo = $handler->db->PDO();
 
-    // Preparing the query sets up the parameter placeholders and helps prevent SQL injection
-    $statement = $pdo->prepare($query);
+//     // This "query" is just a simple call to a stored procedure in our MySQL Database
+//     // The question mark is a special placeholder for parameters the pecedure takes
+//     $query = "CALL get_one_item(?)";
 
-    // This executes the query. THIS is where your parameters go, as an array (even if only 1). 
-    $statement->execute([$id]); 
+//     // Preparing the query sets up the parameter placeholders and helps prevent SQL injection
+//     $statement = $pdo->prepare($query);
 
-    // The fetchAll() function returns an array. Each item contains 1 record. 
-    // Each record in the array is a PHP associative array (e.g. ["id" => 123, "name" => "Bob"]). 
-    $result = $statement->fetchAll();
+//     // This executes the query. THIS is where your parameters go, as an array (even if only 1). 
+//     $statement->execute([$id]); 
 
-    // The response->json() function accepts a PHP array or object as input
-    // It then automatically converts it to JSON for you and outputs appropriate headers. 
-    $handler->response->json($result);
-}
+//     // The fetchAll() function returns an array. Each item contains 1 record. 
+//     // Each record in the array is a PHP associative array (e.g. ["id" => 123, "name" => "Bob"]). 
+//     $result = $statement->fetchAll();
+
+//     // The response->json() function accepts a PHP array or object as input
+//     // It then automatically converts it to JSON for you and outputs appropriate headers. 
+//     $handler->response->json($result);
+// }
 
     //This function does the same as getRecord but uses a different stored procedure
-function getAllRecords (Handler $handler)
-{
-    // Create a new PDO object with our DataSource class
-    $pdo = $handler->db->PDO();
-
-    // This simple "query" is just a stored procedure call—one that does NOT need parameters
-    $query = "CALL get_list_items()";  
-
-    // We prepare the statement anyway because it still helps optimize the query
-    $statement = $pdo->prepare($query);
-
-    // We execute the query on the MySQL server. No parameters needed. 
-    $statement->execute();  
-
-    // Output a PHP array of all records found. Each item in the array is a PHP Associative Array.
-    $result = $statement->fetchAll();
-
-    // Automatically convert our PHP array to JSON and output it for the client. 
-    $handler->response->json($result);
-}
-
+    function GET (Handler $handler)
+    {
+        // Create a new PDO object with our DataSource class
+        $pdo = $handler->db->PDO();
+    
+        // This direct SQL query fetches all records from the 'todolists' table
+        $query = "SELECT * FROM todolists";  
+    
+        // We prepare the statement as it is best practice to do so even with straightforward queries
+        $statement = $pdo->prepare($query);
+    
+        // We execute the query on the MySQL server. No parameters are needed for this query
+        $statement->execute();  
+    
+        // Output a PHP array of all records found. Each item in the array is a PHP Associative Array.
+        $result = $statement->fetchAll();
+    
+        // Automatically convert our PHP array to JSON and output it for the client. 
+        $handler->response->json($result);
+    }
 // This function executes if you create a fetch() request to api/example.php and use "DELETE" as the method
 function DELETE(Handler $handler)
 {
@@ -106,32 +106,40 @@ function DELETE(Handler $handler)
 // This function executes if you create a fetch() request to api/example.php and use "POST" as the method
 function POST(Handler $handler) // GOOD//
 {
-    // Create the PDO object
-    
-    // Write a SQL query to use with placeholders for the data
-    // The query will have MULTIPLE parameters. You may want to NAME the parameters to avoid confusion. 
-    // Use a special syntax. Instead of question marks, use column (key) names with a colon in front: 
-    $myQuery = "CALL create_record_procedure(:name,:age)";
-    
-    // Use a special PHP Associative Array for named parameters. The key names should start with a colon too. 
-    // Obviously you'll need to get the values you need ($handler->request should have them somewhere)
-    $parameters = [
-        ":name" => "bob",
-        ":age" => 23
-    ];
+    // Create the PDO object from the DataSource
+    $pdo = $handler->db->PDO();
 
-    // NOTE: We do NOT have an ID. You shouldn't need an ID to create a record, your MySQL DB can do that. 
-    // The exception is if you want to generate your IDs in PHP for some reason. I don't recommend it. 
+    // The SQL query to insert a new list with just the list name. ID is auto-incremented.
+    $query = "INSERT INTO todolists (list_name) VALUES (:list_name)";
 
-    // Prepare the query
+    // Assume you get this value from the client-side. Adjust the retrieval as necessary.
+    $listName = $handler->request->post['listName'] ?? null;
 
-    // Execute the query, use the $parameters variable as the parameter. 
+    // Check if the list name is provided
+    if (!$listName) {
+        $handler->response->json(['success' => false, 'message' => 'List name is required.']);
+        return;
+    }
 
-    // Fetch the query results
+    // Prepare the SQL statement with the placeholder for list_name
+    $statement = $pdo->prepare($query);
 
-    // Return JSON (or some type of "success" response)
-    // You're creating a record. It would be wise to return the record itself so you're 100% sure it worked. 
-    // You could also just assume it worked and return a success message. 
+    try {
+        // Execute the query with the list name parameter
+        $statement->execute([':list_name' => $listName]);
+
+        // Check if the insert was successful
+        if ($statement->rowCount() > 0) {
+            // Return success message with the ID of the newly created list
+            $newId = $pdo->lastInsertId(); // Gets the last inserted ID
+            $handler->response->json(['success' => true, 'message' => 'List created successfully', 'list_id' => $newId]);
+        } else {
+            $handler->response->json(['success' => false, 'message' => 'Failed to create list']);
+        }
+    } catch (PDOException $e) {
+        // Return JSON error message in case of a database error
+        $handler->response->json(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    }
 }
 
 
