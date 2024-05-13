@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>To-Do List Application</title>
+    <title><strong>To Do List Final</strong></title>
     <style>
         body, html {
             margin: 0;
@@ -67,17 +67,23 @@
 
         button {
             padding: 12px 24px;
-            background-color: #007BFF;
+            background-color: #007BFF; /* Blue color for all buttons */
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 18px;
+            font-size: 18px; /* Standard size for all buttons */
         }
 
         button:hover {
             background-color: #0056b3;
         }
+
+        .rename-list-btn { /* Smaller "Rename List" button with margin */
+            font-size: 12px; /* Smaller font size */
+            margin-left: 10px; /* Spacing between the list name and the button */
+        }
+
         .list-items li, .add-item-controls {
            display: flex;
            justify-content: space-between;
@@ -91,6 +97,7 @@
            border-radius: 5px;
            cursor: pointer;
            margin-right: 5px;
+           background-color: #007BFF; /* Uniform blue color for all buttons */
        }
 
        .delete-btn {
@@ -101,16 +108,8 @@
            background-color: #c82333;
        }
 
-       .add-item-btn {
-           background-color: #28a745;
-       }
-
        .add-item-btn:hover {
-           background-color: #218838;
-       }
-
-       .rename-list-btn, .sort-btn {
-           background-color: #007bff;
+           background-color: #0056b3;
        }
 
        .rename-list-btn:hover, .sort-btn:hover {
@@ -128,61 +127,113 @@
        }
    </style>
    <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const listSummariesElement = document.querySelector('.list-summaries');
-        const listDetailsHeader = document.querySelector('.list-details h2');
-        const createListButton = document.getElementById('createList');
-    
-        // Function to fetch all lists and render them
-        function fetchAndRenderLists() {
-            fetch('example.php')
-                .then(response => response.json())
-                .then(data => {
-                    listSummariesElement.innerHTML = ''; // Clear existing entries
-                    data.forEach(list => {
-                        const button = document.createElement('button');
-                        button.textContent = list.list_name; 
-                        button.className = 'list-btn';
-                        button.onclick = function() {
-                            
-                            listDetailsHeader.textContent = `List Details - ${list.list_name}`;
-                        };
-                        listSummariesElement.appendChild(button);
-                    });
-                })
-                .catch(error => {
-                    console.error('Error fetching lists:', error);
-                    listSummariesElement.innerHTML = 'Error loading lists.';
-                });
-        }
-    
-        // Event listener for creating a new list
-        createListButton.addEventListener('click', function() {
-            const listName = prompt('Enter new list name:');
-            if (listName) {
-                fetch('example.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: `listName=${encodeURIComponent(listName)}`
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        fetchAndRenderLists(); // Refresh the list of all lists
-                    } else {
-                        alert(data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                });
-            }
-        });
-    
-        // Initial fetch and render of lists
-        fetchAndRenderLists();
-    });
-    </script>
+       document.addEventListener("DOMContentLoaded", function() {
+           let lists = [];
+           let currentListIndex = null;
+
+           const listSummariesElement = document.querySelector('.list-summaries');
+           const listItemsElement = document.querySelector('.list-items');
+           const listDetailsHeader = document.querySelector('.list-details h2');
+           const createListButton = document.getElementById('createList');
+           const sortByNameBtn = document.getElementById('sortByName');
+           const sortByCreatedBtn = document.getElementById('sortByCreated');
+
+           createListButton.addEventListener('click', function() {
+               const listName = prompt('Enter new list name:');
+               if (listName) {
+                   lists.push({ name: listName, items: [], created: new Date() });
+                   renderLists();
+               }
+           });
+
+           sortByNameBtn.addEventListener('click', function() {
+               lists.sort((a, b) => a.name.localeCompare(b.name));
+               renderLists();
+           });
+
+           sortByCreatedBtn.addEventListener('click', function() {
+               lists.sort((a, b) => a.created - b.created);
+               renderLists();
+           });
+
+           function renderLists() {
+               listSummariesElement.innerHTML = '';
+               lists.forEach((list, index) => {
+                   const li = document.createElement('li');
+                   li.textContent = list.name;
+                   li.addEventListener('click', () => {
+                       currentListIndex = index;
+                       renderItems();
+                   });
+                   listSummariesElement.appendChild(li);
+               });
+           }
+
+           function renderItems() {
+               if (currentListIndex !== null) {
+                   const items = lists[currentListIndex].items;
+                   listDetailsHeader.innerHTML = 'List Details - ' + lists[currentListIndex].name;
+                   
+                   const renameListBtn = document.createElement('button');
+                   renameListBtn.textContent = 'Rename List';
+                   renameListBtn.className = 'rename-list-btn';
+                   renameListBtn.onclick = function() {
+                       const newListName = prompt('Enter new list name:');
+                       if (newListName) {
+                           lists[currentListIndex].name = newListName;
+                           renderLists();
+                           renderItems();
+                       }
+                   };
+                   listDetailsHeader.appendChild(renameListBtn);
+
+                   listItemsElement.innerHTML = '';
+                   items.forEach((item, itemIndex) => {
+                       const li = document.createElement('li');
+                       li.textContent = item.text;
+                       li.className = item.done ? 'completed' : '';
+                       li.addEventListener('click', () => {
+                           item.done = !item.done;
+                           renderItems();
+                       });
+
+                       const deleteBtn = document.createElement('button');
+                       deleteBtn.textContent = 'Delete';
+                       deleteBtn.classList.add('delete-btn');
+                       deleteBtn.addEventListener('click', (e) => {
+                           e.stopPropagation();
+                           items.splice(itemIndex, 1);
+                           renderItems();
+                       });
+                       
+                       li.appendChild(deleteBtn);
+                       listItemsElement.appendChild(li);
+                   });
+
+                   const addItemControls = document.createElement('div');
+                   addItemControls.className = 'add-item-controls';
+
+                   const addItemInput = document.createElement('input');
+                   addItemInput.type = 'text';
+
+                   const addItemButton = document.createElement('button');
+                   addItemButton.textContent = 'Add Item';
+                   addItemButton.className = 'add-item-btn';
+                   addItemButton.onclick = () => {
+                       if (addItemInput.value) {
+                           lists[currentListIndex].items.push({ text: addItemInput.value, done: false });
+                           addItemInput.value = '';
+                           renderItems();
+                       }
+                   };
+
+                   addItemControls.appendChild(addItemInput);
+                   addItemControls.appendChild(addItemButton);
+                   listItemsElement.appendChild(addItemControls);
+               }
+           }
+       });
+   </script>
 </head>
 <body>
    <div class="container">
