@@ -1,4 +1,4 @@
-Final CPSC 431 To Do List Web App
+Final CPSC 431 To Do List Web App |
 Authors: Dustin Chavez and Braulio Martin
 -------------------------------------------------------------------------------
 Features:
@@ -15,5 +15,4 @@ Features:
 - Step 2: Run Xampp and ensure MySQL and Apache are running
 - Step 3: Open any browser and enter "http://localhost/431Final_chavezdustinmartinbraulio/home.html"
 *To see new list added you must refresh the page
-- Some Lists have been added to show that it works
 -------------------------------------------------------------------------------
