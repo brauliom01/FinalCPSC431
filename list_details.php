@@ -216,7 +216,7 @@ $tasks = getTasksForList($handler, $list_id);
             </ul>
         </section>
         <footer>
-            <a href="ToDoCPSC431.html">Back to All Lists</a>
+            <a href="home.html">Back to All Lists</a>
         </footer>
     </div>
 </body>

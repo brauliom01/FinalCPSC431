@@ -86,7 +86,7 @@ function DELETE(Handler $handler) {
     $listId = $handler->request->post['list_id'] ?? null;
 
     if ($listId !== null) {
-        // Delete all tasks associated with the list
+        // Delete  tasks associated with the list
         $deleteTasksQuery = "DELETE FROM tasks WHERE list_id = :list_id";
         $deleteTasksStatement = $pdo->prepare($deleteTasksQuery);
         $deleteTasksStatement->execute([':list_id' => $listId]);
