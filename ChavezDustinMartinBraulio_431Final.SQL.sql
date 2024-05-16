@@ -27,6 +27,12 @@ SET time_zone = "+00:00";
 -- Table structure for table `Tasks`
 --
 
+CREATE TABLE `Tasks` (
+  `task_id` int(11) NOT NULL,
+  `list_id` int(11) NOT NULL,
+  `task_description` varchar(255) NOT NULL,
+  `is_complete` tinyint(1) NOT NULL DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
