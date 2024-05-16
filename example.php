@@ -62,93 +62,84 @@ $handler->process();
 // }
 
     //This function does the same as getRecord but uses a different stored procedure
-    function GET (Handler $handler)
-    {
-        // Create a new PDO object with our DataSource class
+    function GET (Handler $handler) {
         $pdo = $handler->db->PDO();
+        $sort = $handler->request->get['sort'] ?? 'name'; // Default sorting by name
+        $order = 'ASC';
     
-        // This direct SQL query fetches all records from the 'todolists' table
-        $query = "SELECT * FROM todolists";  
+        if ($sort === 'name') {
+            $query = "SELECT * FROM todolists ORDER BY list_name $order";
+        } elseif ($sort === 'created') {
+            $query = "SELECT * FROM todolists ORDER BY created_at $order";
+        } else {
+            $query = "SELECT * FROM todolists";
+        }
     
-        // We prepare the statement as it is best practice to do so even with straightforward queries
         $statement = $pdo->prepare($query);
-    
-        // We execute the query on the MySQL server. No parameters are needed for this query
-        $statement->execute();  
-    
-        // Output a PHP array of all records found. Each item in the array is a PHP Associative Array.
+        $statement->execute();
         $result = $statement->fetchAll();
-    
-        // Automatically convert our PHP array to JSON and output it for the client. 
         $handler->response->json($result);
     }
 // This function executes if you create a fetch() request to api/example.php and use "DELETE" as the method
-function DELETE(Handler $handler)
-{
-    // Create the PDO object
+function DELETE(Handler $handler) {
+    $pdo = $handler->db->PDO();
+    $listId = $handler->request->post['list_id'] ?? null;
 
-    // Get the ID of the record you want to delete ($handler->request should have it somewhere)
+    if ($listId !== null) {
+        // Delete all tasks associated with the list
+        $deleteTasksQuery = "DELETE FROM tasks WHERE list_id = :list_id";
+        $deleteTasksStatement = $pdo->prepare($deleteTasksQuery);
+        $deleteTasksStatement->execute([':list_id' => $listId]);
 
-    // Write a SQL query to use with a placeholder for the ID
+        // Delete the list itself
+        $deleteListQuery = "DELETE FROM todolists WHERE list_id = :list_id";
+        $deleteListStatement = $pdo->prepare($deleteListQuery);
+        $deleteListStatement->execute([':list_id' => $listId]);
 
-    // Prepare the query 
-
-    // Execute the query, provide the ID as a parameter
-
-    // Fetch the query results
-
-    // Return JSON (or some type of "success" response)
-    // You're deleting so you don't necessarily have results to return!
+        if ($deleteListStatement->rowCount() > 0) {
+            $handler->response->json(['success' => true]);
+        } else {
+            $handler->response->json(['success' => false, 'message' => 'Failed to delete list']);
+        }
+    } else {
+        $handler->response->json(['success' => false, 'message' => 'Invalid request']);
+    }
 }
 
 
 
 // This function executes if you create a fetch() request to api/example.php and use "POST" as the method
-function POST(Handler $handler) // GOOD//
-{
-    // Create the PDO object from the DataSource
+function POST(Handler $handler) {
     $pdo = $handler->db->PDO();
-
-    // The SQL query to insert a new list with just the list name. ID is auto-incremented.
-    $query = "INSERT INTO todolists (list_name) VALUES (:list_name)";
-
-    // Assume you get this value from the client-side. Adjust the retrieval as necessary.
     $listName = $handler->request->post['listName'] ?? null;
+    $taskDescription = $handler->request->post['task_description'] ?? null;
+    $listId = $handler->request->post['list_id'] ?? null;
 
-    // Check if the list name is provided
-    if (!$listName) {
-        $handler->response->json(['success' => false, 'message' => 'List name is required.']);
-        return;
-    }
-
-    // Prepare the SQL statement with the placeholder for list_name
-    $statement = $pdo->prepare($query);
-
-    try {
-        // Execute the query with the list name parameter
+    if ($handler->request->post['delete']) {
+        DELETE($handler);
+    } elseif ($listName) {
+        $query = "INSERT INTO todolists (list_name) VALUES (:list_name)";
+        $statement = $pdo->prepare($query);
         $statement->execute([':list_name' => $listName]);
 
-        // Check if the insert was successful
         if ($statement->rowCount() > 0) {
-            // Return success message with the ID of the newly created list
-            $newId = $pdo->lastInsertId(); // Gets the last inserted ID
+            $newId = $pdo->lastInsertId();
             $handler->response->json(['success' => true, 'message' => 'List created successfully', 'list_id' => $newId]);
         } else {
             $handler->response->json(['success' => false, 'message' => 'Failed to create list']);
         }
-    } catch (PDOException $e) {
-        // Return JSON error message in case of a database error
-        $handler->response->json(['success' => false, 'message' => 'Database error: ' . $e->getMessage()]);
+    } elseif ($taskDescription && $listId) {
+        $query = "INSERT INTO tasks (list_id, task_description) VALUES (:list_id, :task_description)";
+        $statement = $pdo->prepare($query);
+        $statement->execute([':list_id' => $listId, ':task_description' => $taskDescription]);
+
+        if ($statement->rowCount() > 0) {
+            $newId = $pdo->lastInsertId();
+            $handler->response->json(['success' => true, 'message' => 'Task added successfully', 'task_id' => $newId]);
+        } else {
+            $handler->response->json(['success' => false, 'message' => 'Failed to add task']);
+        }
+    } else {
+        $handler->response->json(['success' => false, 'message' => 'Invalid request']);
     }
 }
-
-
-
-// This function executes if you create a fetch() request to api/example.php and use "PUT" as the method
-function PUT(Handler $handler)  
-{
-    // The PUT function is identical to the POST function with one difference: The ID. 
-    // With PUT we are updating a record that should exist so you NEED to have the ID for this one. 
-    // It can be part of the URL or it can just be part of the payload (data) sent from the client.     
-}
-
